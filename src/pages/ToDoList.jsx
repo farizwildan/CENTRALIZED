@@ -38,6 +38,7 @@ const ToDoList = () => {
       const tanggal = responseTanggal.data.values
         ? responseTanggal.data.values.flat()
         : [];
+
       setNamaSurvOptions([...new Set(namaSurv)]);
       setTanggalOptions(getUniqueAndSortedDays(tanggal));
 
@@ -46,22 +47,50 @@ const ToDoList = () => {
       );
       const rowsMain = responseMain.data.values || [];
 
-      const formattedData = rowsMain.map((row, index) => ({
-        no: index + 1 || "",
-        noContract: row[0] || "",
-        namaDealer: row[4] || "",
-        rcac: row[7] || "",
-        namaCustomer: row[9] || "",
-        alamat: row[10] || "",
-        noHp: row[21] || "",
-        ecall: row[22] || "",
-        angsuran: `${row[17] || ""} - ${row[15] || ""}`,
-        historyPolaBayar: `${row[12] || ""}-${row[13] || ""}-${row[14] || ""}`,
-        ket: row[25] || "",
-        namaSurveyor: namaSurv[index] || "",
-        tanggalJatuhTempo: tanggal[index] || "",
-      }));
+      console.log("Rows Main Length:", rowsMain.length);
+      console.log("Nama Surveyor Length:", namaSurv.length);
+      console.log("Tanggal Length:", tanggal.length);
 
+      const filteredRows = rowsMain.filter(
+        (row) => row && row.length > 0 && row[0] !== ""
+      ); // Memfilter baris kosong
+
+      const formattedData = filteredRows.map((row, index) => {
+        // Logic untuk memformat data
+        const indikator = row[25] || "";
+        let ket = "";
+
+        if (indikator === "EA-OT" || indikator === "D1-D3") {
+          ket = "SUDAH BAYAR";
+        } else if (indikator === "BAHAN") {
+          ket = "BELUM BAYAR";
+        } else if (indikator === "L1" || indikator === "L2-L5") {
+          ket = "LOSS NBOT";
+        }
+
+        const namaSurveyor = namaSurv[index] || "Unknown Surveyor";
+        const tanggalJatuhTempo = tanggal[index] || "Unknown Date";
+
+        return {
+          no: index + 1 || "",
+          noContract: row[0] || "",
+          namaDealer: row[4] || "",
+          rcac: row[7] || "",
+          namaCustomer: row[9] || "",
+          alamat: row[10] || "",
+          noHp: row[21] || "",
+          ecall: row[22] || "",
+          angsuran: `${row[17] || ""} - ${row[15] || ""}`,
+          historyPolaBayar: `${row[12] || ""}-${row[13] || ""}-${
+            row[14] || ""
+          }`,
+          ket: ket,
+          namaSurveyor: namaSurveyor,
+          tanggalJatuhTempo: tanggalJatuhTempo,
+        };
+      });
+
+      console.log("Formatted Data:", formattedData);
       setData(formattedData);
       setFilteredData(formattedData);
     } catch (error) {

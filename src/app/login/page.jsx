@@ -79,14 +79,14 @@ const LoginForm = () => {
 
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700">
-              NPK (Password)
+              NPK/NPO (Password)
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 mt-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-300"
-              placeholder="Masukkan NPK"
+              placeholder="Masukkan NPK/NPO"
               required
             />
           </div>

@@ -171,12 +171,14 @@ const ToDoList = () => {
     return token.token;
   };
 
+  const [fetchedData, setFetchedData] = useState([]);
+
   const fetchDataFromGoogleSheets = async () => {
     try {
       console.log("📡 Fetching latest data from Google Sheets...");
-      const response = await axios.put("/api/update-status");
+      const response = await axios.get("/api/update-status");
       console.log("✅ Data fetched:", response.data);
-      setCurrentItems(response.data);
+      setFetchedData(response.data); // Update the state with fetched data
     } catch (error) {
       console.error(
         "❌ Error fetching data:",
@@ -184,31 +186,52 @@ const ToDoList = () => {
       );
     }
   };
+  useEffect(() => {
+    fetchDataFromGoogleSheets(); // Fetch data when the component mounts
+  }, []);
 
   const handleStatusChange = async (rowIndex, newValue) => {
-    const updatedRowIndex = rowIndex + 3; // Pastikan index sesuai di Google Sheets
+    // Validasi input: pastikan rowIndex dan newValue valid
+    if (
+      typeof rowIndex !== "number" ||
+      typeof newValue !== "string" ||
+      !newValue.trim() // Memastikan newValue tidak kosong atau hanya spasi
+    ) {
+      console.error("⚠️ Invalid data:", { rowIndex, newValue });
+      return; // Tidak lanjutkan request jika data tidak valid
+    }
+
+    // Menyesuaikan rowIndex untuk Google Sheets (pastikan index sesuai)
+    const updatedRowIndex = rowIndex + 3; // Jika perlu menambahkan offset
     console.log("📩 Sending request to API...");
     console.log("Row Index (Adjusted):", updatedRowIndex);
     console.log("New Value:", newValue);
 
     try {
+      // Mengirim PUT request ke API untuk update status
       const response = await axios.put("/api/update-status", {
         rowIndex: updatedRowIndex,
         newValue,
       });
 
-      console.log("✅ Update response:", response.data);
+      // Cek apakah respons dari server berhasil
+      if (response.data?.success) {
+        console.log("✅ Update response:", response.data);
 
-      // ✅ Update state langsung agar UI langsung berubah
-      setFilteredData((prevItems) =>
-        prevItems.map((item, i) =>
-          i === rowIndex ? { ...item, reasonSurv: newValue } : item
-        )
-      );
+        // ✅ Update state langsung agar UI langsung berubah
+        setFilteredData((prevItems) =>
+          prevItems.map((item, i) =>
+            i === rowIndex ? { ...item, reasonSurv: newValue } : item
+          )
+        );
 
-      // ✅ Fetch ulang data untuk memastikan sinkronisasi dengan Google Sheets
-      await fetchDataFromGoogleSheets();
+        // ✅ Fetch ulang data untuk memastikan sinkronisasi dengan Google Sheets
+        await fetchDataFromGoogleSheets();
+      } else {
+        console.error("❌ API response error:", response.data);
+      }
     } catch (error) {
+      // Penanganan error jika API call gagal
       console.error(
         "❌ Error updating Google Sheets:",
         error.response?.data || error.message

@@ -11,14 +11,13 @@ const fetchDataFromGoogleSheets = async () => {
 
         const sheets = google.sheets({ version: "v4", auth });
 
-        // Example: Fetching data from a specific range in Google Sheets
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.NEXT_PUBLIC_SHEET_ID2,
-            range: "master!AR3:AR",  // Change this range as needed
+            range: "master!AR3:AR",
         });
 
         console.log("✅ Data fetched from Google Sheets:", response.data);
-        return response.data.values;  // Return the fetched values
+        return response.data.values;
     } catch (error) {
         console.error("❌ Error fetching data from Google Sheets:", error.message);
         throw new Error("Failed to fetch data from Google Sheets");
@@ -37,9 +36,9 @@ export default async function handler(req, res) {
         const { rowIndex, newValue } = req.body;
         console.log("🔄 Data received:", { rowIndex, newValue });
 
-        // Validation for missing rowIndex or newValue
-        if (rowIndex == null || newValue == null) {
-            console.error("⚠️ Missing rowIndex or newValue!");
+        // Validate for missing or invalid data
+        if (typeof rowIndex !== "number" || !newValue || typeof newValue !== "string") {
+            console.error("⚠️ Invalid data:", { rowIndex, newValue });
             return res.status(400).json({ error: "Invalid request data" });
         }
 
@@ -52,10 +51,10 @@ export default async function handler(req, res) {
 
         console.log("📊 Updating Google Sheets at row:", rowIndex);
 
-        // Update Google Sheets at specified row and column (AR for Reason Surv)
+        // Update Google Sheets at the specified row
         const response = await sheets.spreadsheets.values.update({
             spreadsheetId: process.env.NEXT_PUBLIC_SHEET_ID2,
-            range: `master!AR${rowIndex}`, // Kolom AR tempat Reason Surv
+            range: `master!AR${rowIndex}`, // Specify correct range (AR for Reason Surv)
             valueInputOption: "USER_ENTERED",
             resource: { values: [[newValue]] },
         });

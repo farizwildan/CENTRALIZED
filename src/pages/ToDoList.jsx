@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useRouter } from "next/router";
 import Header from "../app/components/header";
 import Footer from "../app/components/Footer";
-import credentials from "../config/service-account.json";
 
 const ToDoList = () => {
   const [data, setData] = useState([]);
@@ -55,7 +54,7 @@ const ToDoList = () => {
           ),
           axios.get(
             `https://sheets.googleapis.com/v4/spreadsheets/${sheetID}/values/master!AR3:AR?key=${apiKey}`
-          ),
+          ), // Ambil data Reason Surv dari baris 39
         ]);
 
       const namaSurv = responseNamaSurv.data.values
@@ -76,16 +75,11 @@ const ToDoList = () => {
       );
       const rowsMain = responseMain.data.values || [];
 
-      console.log("Rows Main Length:", rowsMain.length);
-      console.log("Nama Surveyor Length:", namaSurv.length);
-      console.log("Tanggal Length:", tanggal.length);
-
       const filteredRows = rowsMain.filter(
         (row) => row && row.length > 0 && row[0] !== ""
-      ); // Memfilter baris kosong
+      );
 
       const formattedData = filteredRows.map((row, index) => {
-        // Logic untuk memformat data
         const indikator = row[25] || "";
         let ket = "";
 
@@ -99,7 +93,7 @@ const ToDoList = () => {
 
         const namaSurveyor = namaSurv[index] || "Unknown Surveyor";
         const tanggalJatuhTempo = tanggal[index] || "Unknown Date";
-        const reasonSurveyor = reasonSurv[index] || "";
+        const reasonSurveyor = reasonSurv[index] || ""; // Ambil dari responseReasonSurv
 
         return {
           no: index + 1 || "",
@@ -117,55 +111,10 @@ const ToDoList = () => {
           ket: row[25] || "",
           namaSurveyor: namaSurveyor,
           tanggalJatuhTempo: tanggalJatuhTempo,
-          reasonSurv: reasonSurveyor,
+          reasonSurv: reasonSurveyor, // Update this field
         };
       });
 
-      console.log("Formatted Data:", formattedData);
-      console.log("Rows Main Length:", rowsMain.length);
-      console.log("Nama Surveyor Length:", namaSurv.length);
-      console.log("Tanggal Length:", tanggal.length);
-
-      const filteredRows = rowsMain.filter(
-        (row) => row && row.length > 0 && row[0] !== ""
-      ); // Memfilter baris kosong
-
-      const formattedData = filteredRows.map((row, index) => {
-        // Logic untuk memformat data
-        const indikator = row[25] || "";
-        let ket = "";
-
-        if (indikator === "EA-OT" || indikator === "D1-D3") {
-          ket = "SUDAH BAYAR";
-        } else if (indikator === "BAHAN") {
-          ket = "BELUM BAYAR";
-        } else if (indikator === "L1" || indikator === "L2-L5") {
-          ket = "LOSS NBOT";
-        }
-
-        const namaSurveyor = namaSurv[index] || "Unknown Surveyor";
-        const tanggalJatuhTempo = tanggal[index] || "Unknown Date";
-
-        return {
-          no: index + 1 || "",
-          noContract: row[0] || "",
-          namaDealer: row[4] || "",
-          rcac: row[7] || "",
-          namaCustomer: row[9] || "",
-          alamat: row[10] || "",
-          noHp: row[21] || "",
-          ecall: row[22] || "",
-          angsuran: `${row[17] || ""} - ${row[15] || ""}`,
-          historyPolaBayar: `${row[12] || ""}-${row[13] || ""}-${
-            row[14] || ""
-          }`,
-          ket: ket,
-          namaSurveyor: namaSurveyor,
-          tanggalJatuhTempo: tanggalJatuhTempo,
-        };
-      });
-
-      console.log("Formatted Data:", formattedData);
       setData(formattedData);
       setFilteredData(formattedData);
     } catch (error) {
@@ -211,6 +160,7 @@ const ToDoList = () => {
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
   const getAccessToken = async () => {
+    const credentials = JSON.parse(process.env.GOOGLE_CLOUD_CREDENTIALS);
     const auth = new google.auth.GoogleAuth({
       credentials,
       scopes: ["https://www.googleapis.com/auth/spreadsheets"],

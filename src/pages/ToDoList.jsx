@@ -108,10 +108,11 @@ const ToDoList = () => {
           historyPolaBayar: `${row[12] || ""}-${row[13] || ""}-${
             row[14] || ""
           }`,
-          ket: row[25] || "",
+          ket: ket,
           namaSurveyor: namaSurveyor,
           tanggalJatuhTempo: tanggalJatuhTempo,
           reasonSurv: reasonSurveyor, // Update this field
+          originalRowIndex: index + 3,
         };
       });
 
@@ -177,8 +178,26 @@ const ToDoList = () => {
     try {
       console.log("📡 Fetching latest data from Google Sheets...");
       const response = await axios.get("/api/update-status");
-      console.log("✅ Data fetched:", response.data);
-      setFetchedData(response.data); // Update the state with fetched data
+
+      // Pastikan data ada
+      if (!response.data || !Array.isArray(response.data)) {
+        console.error("❌ Invalid data received:", response.data);
+        return;
+      }
+
+      console.log("✅ Full Data fetched:", response.data.length);
+
+      // Filter data kosong dan simpan row index asli
+      const filteredData = response.data
+        .map((item, index) => ({
+          ...item,
+          originalRowIndex: index + 3, // Sesuaikan dengan indeks di Google Sheets
+        }))
+        .filter((item) => item.reasonSurv?.trim() !== ""); // Hanya simpan yang tidak kosong
+
+      console.log("✅ Filtered Data:", filteredData.length);
+
+      setFetchedData(filteredData); // Update state dengan data yang telah difilter
     } catch (error) {
       console.error(
         "❌ Error fetching data:",
@@ -186,56 +205,43 @@ const ToDoList = () => {
       );
     }
   };
+
   useEffect(() => {
     fetchDataFromGoogleSheets(); // Fetch data when the component mounts
   }, []);
 
   const handleStatusChange = async (rowIndex, newValue) => {
-    // Validasi input: pastikan rowIndex dan newValue valid
-    if (
-      typeof rowIndex !== "number" ||
-      typeof newValue !== "string" ||
-      !newValue.trim() // Memastikan newValue tidak kosong atau hanya spasi
-    ) {
-      console.error("⚠️ Invalid data:", { rowIndex, newValue });
-      return; // Tidak lanjutkan request jika data tidak valid
+    const updatedRowIndex = filteredData[rowIndex]?.originalRowIndex; // ✅ Menggunakan originalRowIndex
+    if (!updatedRowIndex) {
+      console.error("❌ Error: Row index tidak ditemukan untuk update!");
+      return;
     }
 
-    // Menyesuaikan rowIndex untuk Google Sheets (pastikan index sesuai)
-    const updatedRowIndex = rowIndex + 3; // Jika perlu menambahkan offset
     console.log("📩 Sending request to API...");
     console.log("Row Index (Adjusted):", updatedRowIndex);
     console.log("New Value:", newValue);
 
     try {
-      // Mengirim PUT request ke API untuk update status
       const response = await axios.put("/api/update-status", {
-        rowIndex: updatedRowIndex,
+        rowIndex: updatedRowIndex, // ✅ Gunakan originalRowIndex
         newValue,
       });
 
-      // Cek apakah respons dari server berhasil
       if (response.data?.success) {
         console.log("✅ Update response:", response.data);
 
-        // ✅ Update state langsung agar UI langsung berubah
         setFilteredData((prevItems) =>
           prevItems.map((item, i) =>
             i === rowIndex ? { ...item, reasonSurv: newValue } : item
           )
         );
 
-        // ✅ Fetch ulang data untuk memastikan sinkronisasi dengan Google Sheets
         await fetchDataFromGoogleSheets();
       } else {
         console.error("❌ API response error:", response.data);
       }
     } catch (error) {
-      // Penanganan error jika API call gagal
-      console.error(
-        "❌ Error updating Google Sheets:",
-        error.response?.data || error.message
-      );
+      console.error("❌ Error updating Google Sheets:", error.message);
     }
   };
 
@@ -283,6 +289,27 @@ const ToDoList = () => {
               ))}
             </select>
           </div>
+        </div>
+
+        {/* Pagination Controls */}
+        <div className="flex justify-between mt-4">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(currentPage - 1)}
+            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(currentPage + 1)}
+            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+          >
+            Next
+          </button>
         </div>
 
         <div className="overflow-x-auto">
@@ -405,7 +432,6 @@ const ToDoList = () => {
             </tbody>
           </table>
         </div>
-
         {/* Pagination Controls */}
         <div className="flex justify-between mt-4">
           <button

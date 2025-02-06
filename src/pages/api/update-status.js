@@ -32,10 +32,18 @@ const fetchDataFromGoogleSheets = async () => {
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.NEXT_PUBLIC_SHEET_ID2,
             range: "master!AR3:AR", // Pastikan range sesuai dengan data yang ingin diambil
+            valueRenderOption: "FORMATTED_VALUE" // atau coba "UNFORMATTED_VALUE"
         });
 
-        console.log("✅ Data fetched from Google Sheets:", response.data);
-        return response.data.values;
+        let data = response.data.values || []; // Pastikan data tidak undefined
+
+        console.log("Full Data Response (Before Filtering):", data.length);
+
+        // 🔥 Filter baris kosong
+        const filteredData = data.filter(row => row.length > 0 && row[0] && row[0].trim() !== "");
+
+        console.log("✅ Filtered Data (No Empty Rows):", filteredData.length);
+        return filteredData;
     } catch (error) {
         console.error("❌ Error fetching data from Google Sheets:", error.message);
         throw new Error("Failed to fetch data from Google Sheets");

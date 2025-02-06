@@ -14,16 +14,14 @@ const ToDoList = () => {
   const [tanggalOptions, setTanggalOptions] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10); // Jumlah item per halaman
-
   const sheetID = process.env.NEXT_PUBLIC_SHEET_ID2;
   const apiKey = process.env.NEXT_PUBLIC_API_KEY;
+  const router = useRouter();
+  const [username, setUsername] = useState("");
 
   useEffect(() => {
     fetchData();
   }, []);
-
-  const router = useRouter();
-  const [username, setUsername] = useState("");
 
   useEffect(() => {
     const isLoggedIn = sessionStorage.getItem("isLoggedIn");
@@ -44,7 +42,7 @@ const ToDoList = () => {
 
   const fetchData = async () => {
     try {
-      const [responseNamaSurv, responseTanggal, responseReasonSurv] =
+      const [responseNamaSurv, responseTanggal, responseReasonSurv, resMain] =
         await Promise.all([
           axios.get(
             `https://sheets.googleapis.com/v4/spreadsheets/${sheetID}/values/master!G3:G?key=${apiKey}`
@@ -54,7 +52,10 @@ const ToDoList = () => {
           ),
           axios.get(
             `https://sheets.googleapis.com/v4/spreadsheets/${sheetID}/values/master!AR3:AR?key=${apiKey}`
-          ), // Ambil data Reason Surv dari baris 39
+          ),
+          axios.get(
+            `https://sheets.googleapis.com/v4/spreadsheets/${sheetID}/values/master!A3:AR?key=${apiKey}`
+          ),
         ]);
 
       const namaSurv = responseNamaSurv.data.values
@@ -94,6 +95,7 @@ const ToDoList = () => {
         const namaSurveyor = namaSurv[index] || "Unknown Surveyor";
         const tanggalJatuhTempo = tanggal[index] || "Unknown Date";
         const reasonSurveyor = reasonSurv[index] || ""; // Ambil dari responseReasonSurv
+        const rowsMain = resMain.data.values || [];
 
         return {
           no: index + 1 || "",
@@ -222,20 +224,24 @@ const ToDoList = () => {
     console.log("New Value:", newValue);
 
     try {
+      // Mengirim PUT request ke API untuk update status
       const response = await axios.put("/api/update-status", {
         rowIndex: updatedRowIndex, // ✅ Gunakan originalRowIndex
         newValue,
       });
 
+      // Cek apakah respons dari server berhasil
       if (response.data?.success) {
         console.log("✅ Update response:", response.data);
 
+        // ✅ Update state langsung agar UI langsung berubah
         setFilteredData((prevItems) =>
           prevItems.map((item, i) =>
             i === rowIndex ? { ...item, reasonSurv: newValue } : item
           )
         );
 
+        // ✅ Fetch ulang data untuk memastikan sinkronisasi dengan Google Sheets
         await fetchDataFromGoogleSheets();
       } else {
         console.error("❌ API response error:", response.data);
@@ -399,10 +405,7 @@ const ToDoList = () => {
                     <select
                       value={item.reasonSurv}
                       onChange={(e) =>
-                        handleStatusChange(
-                          indexOfFirstItem + index,
-                          e.target.value
-                        )
+                        handleStatusChange(index, e.target.value)
                       }
                       className="block w-full min-w-[150px] border border-gray-300 rounded-md p-2 justify-center items-center pr-5"
                     >

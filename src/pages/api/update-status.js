@@ -6,9 +6,11 @@ const getAuthClient = () => {
     try {
         // Coba parse `GOOGLE_CLOUD_CREDENTIALS`
         const credentials = JSON.parse(process.env.GOOGLE_CLOUD_CREDENTIALS);
+        console.log("✅ Parsed Credentials:", credentials);
 
         // Pastikan `private_key` diformat dengan benar
         credentials.private_key = credentials.private_key.replace(/\\n/g, "\n");
+        console.log("🔑 Private Key Length:", credentials.private_key.length);
 
         return new google.auth.GoogleAuth({
             credentials,
@@ -42,7 +44,7 @@ const fetchDataFromGoogleSheets = async () => {
 
 export default async function handler(req, res) {
     console.log("📩 Received API request:", req.method);
-
+    console.log("Request received:", req.method, req.body);
     if (req.method === "GET") {
         try {
             const data = await fetchDataFromGoogleSheets();
@@ -57,6 +59,7 @@ export default async function handler(req, res) {
         try {
             const { rowIndex, newValue } = req.body;
             console.log("🔄 Data received:", { rowIndex, newValue });
+            console.log("Preparing to update at range:", `master!AR${rowIndex}`);
 
             // Validasi data yang diterima
             if (typeof rowIndex !== "number" || !newValue || typeof newValue !== "string") {

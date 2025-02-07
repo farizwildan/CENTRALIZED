@@ -428,6 +428,7 @@ const ToDoList = () => {
                       </option>
                       <option value="8. Janji Bayar">8. Janji Bayar</option>
                       <option value="9. Sudah Bayar">9. Sudah Bayar</option>
+                      <option value="BELUM VALIDASI">BELUM VALIDASI</option>
                     </select>
                   </td>
                 </tr>

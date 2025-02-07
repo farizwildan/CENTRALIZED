@@ -87,7 +87,7 @@ export default async function handler(req, res) {
             // Update data di Google Sheets
             const response = await sheets.spreadsheets.values.update({
                 spreadsheetId: process.env.NEXT_PUBLIC_SHEET_ID2,
-                range: `master!AR${rowIndex + 2}`, // Kolom AR adalah kolom Reason Surv
+                range: `master!AR${rowIndex}`, // Kolom AR adalah kolom Reason Surv
                 valueInputOption: "USER_ENTERED",
                 resource: { values: [[newValue]] },
             });

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Image from "next/image";
 import DailyPerform from "../app/components/DailyPerform";
-import MonthlyPerform from "../app/components/MonthlyPerform"; // Import MonthlyPerform
+import MonthlyPerform from "../app/components/MonthlyPerform";
 import Header from "../app/components/header";
 import Footer from "../app/components/Footer";
 import { useRouter } from "next/router";
@@ -13,7 +13,7 @@ const Achievement = () => {
   const [selectedNamaSurv, setSelectedNamaSurv] = useState("");
   const [selectedTanggal, setSelectedTanggal] = useState("");
   const [dailyPerformData, setDailyPerformData] = useState(null);
-  const [monthlyPerformData, setMonthlyPerformData] = useState(null); // State baru
+  const [monthlyPerformData, setMonthlyPerformData] = useState(null);
 
   const sheetID = process.env.NEXT_PUBLIC_SHEET_ID2;
   const apiKey = process.env.NEXT_PUBLIC_API_KEY;
@@ -30,7 +30,7 @@ const Achievement = () => {
     const storedUsername = sessionStorage.getItem("username");
 
     if (!isLoggedIn) {
-      router.push("/login"); // Redirect jika belum login
+      router.push("/login");
     } else {
       setUsername(storedUsername || "User");
     }
@@ -81,20 +81,17 @@ const Achievement = () => {
       );
 
       if (response.data.values) {
-        // Filter berdasarkan nama surveyor (kolom G) dan tanggal (kolom B)
         const filteredData = response.data.values.filter(
-          (row) => row[6] === selectedNamaSurv // Kolom G = Nama Surveyor
+          (row) => row[6] === selectedNamaSurv
         );
 
-        // Filter berdasarkan tanggal (Kolom B) - hanya tanggal yang sesuai yang akan dipilih
         const filteredDataByTanggal = filteredData.filter(
           (row) =>
-            parseInt(row[1].split("/")[0], 10) === parseInt(selectedTanggal, 10) // Kolom B = Tanggal
+            parseInt(row[1].split("/")[0], 10) === parseInt(selectedTanggal, 10)
         );
 
         const kontrakBahanHariIni = filteredDataByTanggal.length;
 
-        // Ambil data dari kolom Z untuk penyelesaian kontrak
         const responsePenyelesaian = await axios.get(
           `https://sheets.googleapis.com/v4/spreadsheets/${sheetID}/values/master!A3:Z?key=${apiKey}`
         );
@@ -102,19 +99,16 @@ const Achievement = () => {
         let kontrakPenyelesaian = 0;
 
         if (responsePenyelesaian.data.values) {
-          // Filter untuk mencocokkan data penyelesaian berdasarkan Nama Surveyor dan Tanggal
           const penyelesaianFiltered = responsePenyelesaian.data.values.filter(
             (row) => {
-              // Pastikan nama surveyor dan tanggalnya cocok dengan filteredData
               return (
-                row[6] === selectedNamaSurv && // Kolom G = Nama Surveyor
+                row[6] === selectedNamaSurv &&
                 parseInt(row[1].split("/")[0], 10) ===
-                  parseInt(selectedTanggal, 10) // Kolom B = Tanggal
+                  parseInt(selectedTanggal, 10)
               );
             }
           );
 
-          // Hitung penyelesaian kontrak yang sesuai
           penyelesaianFiltered.forEach((row) => {
             if (["EA-OT", "D1-D3"].includes(row[25])) {
               kontrakPenyelesaian++;
@@ -139,7 +133,7 @@ const Achievement = () => {
         setDailyPerformData({
           kontrakHariIni: kontrakBahanHariIni,
           penyelesaian: kontrakPenyelesaian,
-          achievement: achievement.toFixed(2), // 2 angka di belakang koma
+          achievement: achievement.toFixed(2),
         });
       }
     } catch (error) {
@@ -154,14 +148,12 @@ const Achievement = () => {
       );
 
       if (response.data.values) {
-        // Filter data berdasarkan nama surveyor
         const filteredData = response.data.values.filter(
           (row) => row[6] === selectedNamaSurv
         );
 
         const totalKontrak = filteredData.length;
 
-        // Hitung jumlah penyelesaian (EA-OT, D1, D2, D3)
         let penyelesaian = 0;
         let sisaBahan = 0;
 
@@ -173,13 +165,11 @@ const Achievement = () => {
           }
         });
 
-        // Hitung achievement
         const achievement =
           totalKontrak > 0 ? (penyelesaian / totalKontrak) * 100 : 0;
 
-        // Hitung Penyelesaian Menuju Target
         let penyelesaianMenujuTarget;
-        const target = totalKontrak * 0.88; // 88% dari total kontrak
+        const target = totalKontrak * 0.88;
 
         if (achievement >= 88) {
           penyelesaianMenujuTarget = "TARGET!";

@@ -18,7 +18,7 @@ const Header = () => {
         </Link>
         {/* Teks BOOZTI dan Slogan */}
         <div>
-          <h1 className="text-2xl font-bold text-white">BOOZT!</h1>
+          <h1 className="text-2xl font-bold text-white">BOOST!</h1>
           <p className="text-sm italic">
             Be the One, Optimize, Organize, Speed-up, Target!
           </p>

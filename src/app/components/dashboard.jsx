@@ -42,7 +42,7 @@ const Dashboard = () => {
       {/* Heading Section */}
       <div className="text-center mb-6 sm:mb-10">
         <h1 className="text-2xl sm:text-4xl font-bold text-blue-800 mb-1 sm:mb-2">
-          Welcome to <span className="text-blue-600">BOOZT!</span>
+          Welcome to <span className="text-blue-600">BOOST!</span>
         </h1>
         <p className="text-sm sm:text-lg text-gray-600">
           by Surabaya Credit Central Region

@@ -13,7 +13,7 @@ const ToDoList = () => {
   const [namaSurvOptions, setNamaSurvOptions] = useState([]);
   const [tanggalOptions, setTanggalOptions] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10); // Jumlah item per halaman
+  const [itemsPerPage] = useState(10);
   const sheetID = process.env.NEXT_PUBLIC_SHEET_ID2;
   const apiKey = process.env.NEXT_PUBLIC_API_KEY;
   const router = useRouter();
@@ -28,7 +28,7 @@ const ToDoList = () => {
     const storedUsername = sessionStorage.getItem("username");
 
     if (!isLoggedIn) {
-      router.push("/login"); // Redirect jika belum login
+      router.push("/login");
     } else {
       setUsername(storedUsername || "User");
     }
@@ -94,7 +94,7 @@ const ToDoList = () => {
 
         const namaSurveyor = namaSurv[index] || "Unknown Surveyor";
         const tanggalJatuhTempo = tanggal[index] || "Unknown Date";
-        const reasonSurveyor = reasonSurv[index] || ""; // Ambil dari responseReasonSurv
+        const reasonSurveyor = reasonSurv[index] || "";
         const rowsMain = resMain.data.values || [];
 
         return {
@@ -113,7 +113,7 @@ const ToDoList = () => {
           ket: ket,
           namaSurveyor: namaSurveyor,
           tanggalJatuhTempo: tanggalJatuhTempo,
-          reasonSurv: reasonSurveyor, // Update this field
+          reasonSurv: reasonSurveyor,
           originalRowIndex: index + 3,
         };
       });
@@ -153,10 +153,9 @@ const ToDoList = () => {
     }
 
     setFilteredData(filtered);
-    setCurrentPage(1); // Reset ke halaman pertama setelah filter
+    setCurrentPage(1);
   }, [selectedNamaSurv, selectedTanggal, data]);
 
-  // Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
@@ -189,17 +188,16 @@ const ToDoList = () => {
 
       console.log("✅ Full Data fetched:", response.data.length);
 
-      // Filter data kosong dan simpan row index asli
       const filteredData = response.data
         .map((item, index) => ({
           ...item,
-          originalRowIndex: index + 3, // Sesuaikan dengan indeks di Google Sheets
+          originalRowIndex: index + 3,
         }))
-        .filter((item) => item.reasonSurv?.trim() !== ""); // Hanya simpan yang tidak kosong
+        .filter((item) => item.reasonSurv?.trim() !== "");
 
       console.log("✅ Filtered Data:", filteredData.length);
 
-      setFetchedData(filteredData); // Update state dengan data yang telah difilter
+      setFetchedData(filteredData);
     } catch (error) {
       console.error(
         "❌ Error fetching data:",
@@ -209,11 +207,11 @@ const ToDoList = () => {
   };
 
   useEffect(() => {
-    fetchDataFromGoogleSheets(); // Fetch data when the component mounts
+    fetchDataFromGoogleSheets();
   }, []);
 
   const handleStatusChange = async (rowIndex, newValue) => {
-    const updatedRowIndex = filteredData[rowIndex]?.originalRowIndex; // ✅ Menggunakan originalRowIndex
+    const updatedRowIndex = filteredData[rowIndex]?.originalRowIndex;
     if (!updatedRowIndex) {
       console.error("❌ Error: Row index tidak ditemukan untuk update!");
       return;
@@ -224,24 +222,20 @@ const ToDoList = () => {
     console.log("New Value:", newValue);
 
     try {
-      // Mengirim PUT request ke API untuk update status
       const response = await axios.put("/api/update-status", {
-        rowIndex: updatedRowIndex, // ✅ Gunakan originalRowIndex
+        rowIndex: updatedRowIndex,
         newValue,
       });
 
-      // Cek apakah respons dari server berhasil
       if (response.data?.success) {
         console.log("✅ Update response:", response.data);
 
-        // ✅ Update state langsung agar UI langsung berubah
         setFilteredData((prevItems) =>
           prevItems.map((item, i) =>
             i === rowIndex ? { ...item, reasonSurv: newValue } : item
           )
         );
 
-        // ✅ Fetch ulang data untuk memastikan sinkronisasi dengan Google Sheets
         await fetchDataFromGoogleSheets();
       } else {
         console.error("❌ API response error:", response.data);

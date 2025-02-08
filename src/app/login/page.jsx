@@ -1,12 +1,12 @@
-"use client"; // Next.js 13+ menggunakan "use client" agar state berfungsi
+"use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import "@/styles/globals.css";
 
 const LoginForm = () => {
-  const [username, setUsername] = useState(""); // Nama sebagai username
-  const [password, setPassword] = useState(""); // NPK sebagai password
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
 
@@ -17,23 +17,20 @@ const LoginForm = () => {
       const sheetID = process.env.NEXT_PUBLIC_SHEET_ID;
       const apiKey = process.env.NEXT_PUBLIC_API_KEY;
 
-      // Ambil data user dari Google Sheets
       const response = await axios.get(
         `https://sheets.googleapis.com/v4/spreadsheets/${sheetID}/values/Sheet1!A2:B?key=${apiKey}`
       );
 
       const users = response.data.values || [];
 
-      // Cek apakah username (Nama) dan password (NPK) cocok
       const user = users.find(
-        (row) => row[0] === username && row[1] === password // Nama = row[0] dan NPK = row[1]
+        (row) => row[0] === username && row[1] === password
       );
 
       if (user) {
-        // Simpan data di sessionStorage / localStorage
         sessionStorage.setItem("isLoggedIn", "true");
-        sessionStorage.setItem("username", username); // Menyimpan Nama sebagai username
-        router.push("/dashboard"); // Redirect ke dashboard
+        sessionStorage.setItem("username", username);
+        router.push("/dashboard");
       } else {
         setError("Username atau password salah!");
       }
@@ -49,7 +46,7 @@ const LoginForm = () => {
         <div className="flex justify-center mb-6">
           {/* Logo atau Judul */}
           <img
-            src="/images/central.png" // Ganti dengan logo yang sesuai
+            src="/images/central.png"
             alt="Logo"
             className="w-24 h-24 mb-4"
           />

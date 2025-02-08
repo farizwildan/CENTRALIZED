@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Image from "next/image";
 import DailyPerform from "./DailyPerform";
-import MonthlyPerform from "./MonthlyPerform"; // Import MonthlyPerform
+import MonthlyPerform from "./MonthlyPerform";
 
 const Achievement = ({ sheetID, apiKey }) => {
   const [namaSurvOptions, setNamaSurvOptions] = useState([]);
@@ -10,7 +10,7 @@ const Achievement = ({ sheetID, apiKey }) => {
   const [selectedNamaSurv, setSelectedNamaSurv] = useState("");
   const [selectedTanggal, setSelectedTanggal] = useState("");
   const [dailyPerformData, setDailyPerformData] = useState(null);
-  const [monthlyPerformData, setMonthlyPerformData] = useState(null); // State baru
+  const [monthlyPerformData, setMonthlyPerformData] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -55,20 +55,17 @@ const Achievement = ({ sheetID, apiKey }) => {
       );
 
       if (response.data.values) {
-        // Filter berdasarkan nama surveyor (kolom G) dan tanggal (kolom B)
         const filteredData = response.data.values.filter(
-          (row) => row[6] === selectedNamaSurv // Kolom G = Nama Surveyor
+          (row) => row[6] === selectedNamaSurv
         );
 
-        // Filter berdasarkan tanggal (Kolom B) - hanya tanggal yang sesuai yang akan dipilih
         const filteredDataByTanggal = filteredData.filter(
           (row) =>
-            parseInt(row[1].split("/")[0], 10) === parseInt(selectedTanggal, 10) // Kolom B = Tanggal
+            parseInt(row[1].split("/")[0], 10) === parseInt(selectedTanggal, 10)
         );
 
         const kontrakBahanHariIni = filteredDataByTanggal.length;
 
-        // Ambil data dari kolom Z untuk penyelesaian kontrak
         const responsePenyelesaian = await axios.get(
           `https://sheets.googleapis.com/v4/spreadsheets/${sheetID}/values/master!A3:Z?key=${apiKey}`
         );
@@ -76,19 +73,16 @@ const Achievement = ({ sheetID, apiKey }) => {
         let kontrakPenyelesaian = 0;
 
         if (responsePenyelesaian.data.values) {
-          // Filter untuk mencocokkan data penyelesaian berdasarkan Nama Surveyor dan Tanggal
           const penyelesaianFiltered = responsePenyelesaian.data.values.filter(
             (row) => {
-              // Pastikan nama surveyor dan tanggalnya cocok dengan filteredData
               return (
-                row[6] === selectedNamaSurv && // Kolom G = Nama Surveyor
+                row[6] === selectedNamaSurv &&
                 parseInt(row[1].split("/")[0], 10) ===
-                  parseInt(selectedTanggal, 10) // Kolom B = Tanggal
+                  parseInt(selectedTanggal, 10)
               );
             }
           );
 
-          // Hitung penyelesaian kontrak yang sesuai
           penyelesaianFiltered.forEach((row) => {
             if (["EA-OT", "D1-D3"].includes(row[25])) {
               kontrakPenyelesaian++;

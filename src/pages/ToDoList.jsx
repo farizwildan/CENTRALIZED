@@ -84,9 +84,9 @@ const ToDoList = () => {
         const indikator = row[25] || "";
         let ket = "";
 
-        if (indikator === "EA-OT" || indikator === "D1-D3") {
+        if (indikator === "EA-OT") {
           ket = "SUDAH BAYAR";
-        } else if (indikator === "BAHAN") {
+        } else if (indikator === "BAHAN" || indikator === "D1-D3") {
           ket = "BELUM BAYAR";
         } else if (indikator === "L1" || indikator === "L2-L5") {
           ket = "LOSS NBOT";

@@ -110,7 +110,7 @@ const Achievement = () => {
           );
 
           penyelesaianFiltered.forEach((row) => {
-            if (["EA-OT", "D1-D3"].includes(row[25])) {
+            if (["EA-OT"].includes(row[25])) {
               kontrakPenyelesaian++;
             }
           });

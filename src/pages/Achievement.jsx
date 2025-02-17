@@ -158,9 +158,9 @@ const Achievement = () => {
         let sisaBahan = 0;
 
         filteredData.forEach((row) => {
-          if (["EA-OT", "L1", "L2-L5"].includes(row[25])) {
+          if (["EA-OT", "D1-D3", "L1", "L2-L5"].includes(row[25])) {
             penyelesaian++;
-          } else if (["BAHAN", "D1-D3"].includes(row[25])) {
+          } else if (["BAHAN"].includes(row[25])) {
             sisaBahan++;
           }
         });

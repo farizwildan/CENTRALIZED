@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Image from "next/image";
-import DailyPerform from "./DailyPerform";
-import MonthlyPerform from "./MonthlyPerform";
+import DailyPerform from "../app/components/DailyPerform";
+import MonthlyPerform from "../app/components/MonthlyPerform";
+import Header from "../app/components/header";
+import Footer from "../app/components/Footer";
+import { useRouter } from "next/router";
 
-const Achievement = ({ sheetID, apiKey }) => {
+const Achievement = () => {
   const [namaSurvOptions, setNamaSurvOptions] = useState([]);
   const [tanggalOptions, setTanggalOptions] = useState([]);
   const [selectedNamaSurv, setSelectedNamaSurv] = useState("");
@@ -12,9 +15,32 @@ const Achievement = ({ sheetID, apiKey }) => {
   const [dailyPerformData, setDailyPerformData] = useState(null);
   const [monthlyPerformData, setMonthlyPerformData] = useState(null);
 
+  const sheetID = process.env.NEXT_PUBLIC_SHEET_ID2;
+  const apiKey = process.env.NEXT_PUBLIC_API_KEY;
+
   useEffect(() => {
     fetchData();
   }, []);
+
+  const router = useRouter();
+  const [username, setUsername] = useState("");
+
+  useEffect(() => {
+    const isLoggedIn = sessionStorage.getItem("isLoggedIn");
+    const storedUsername = sessionStorage.getItem("username");
+
+    if (!isLoggedIn) {
+      router.push("/login");
+    } else {
+      setUsername(storedUsername || "User");
+    }
+  }, [router]);
+
+  const handleLogout = () => {
+    sessionStorage.removeItem("isLoggedIn");
+    sessionStorage.removeItem("username");
+    router.push("/login");
+  };
 
   useEffect(() => {
     if (selectedNamaSurv && selectedTanggal) {
@@ -84,7 +110,7 @@ const Achievement = ({ sheetID, apiKey }) => {
           );
 
           penyelesaianFiltered.forEach((row) => {
-            if (["EA-OT", "D1-D3"].includes(row[25])) {
+            if (["EA-OT"].includes(row[25])) {
               kontrakPenyelesaian++;
             }
           });
@@ -132,9 +158,9 @@ const Achievement = ({ sheetID, apiKey }) => {
         let sisaBahan = 0;
 
         filteredData.forEach((row) => {
-          if (["EA-OT", "D1-D3", "L1", "L2-L5"].includes(row[25])) {
+          if (["EA-OT", "L1", "L2-L5"].includes(row[25])) {
             penyelesaian++;
-          } else if (["BAHAN"].includes(row[25])) {
+          } else if (["BAHAN", "D1-D3"].includes(row[25])) {
             sisaBahan++;
           }
         });
@@ -180,59 +206,65 @@ const Achievement = ({ sheetID, apiKey }) => {
   };
 
   return (
-    <div className="max-w-screen-xl mx-auto px-6 py-8 bg-gray-100 rounded-lg shadow-lg">
-      {/* Form Input */}
-      <div className="flex justify-start items-center mb-6 gap-3">
-        <div className="flex flex-col">
-          <label className="text-sm font-semibold text-gray-700 mb-1">
-            Regional Field Verifier Name
-          </label>
-          <select
-            value={selectedNamaSurv}
-            onChange={(e) => setSelectedNamaSurv(e.target.value)}
-            className="border border-gray-300 rounded-lg px-4 py-2 w-64 focus:ring focus:ring-blue-300"
-          >
-            <option value="">Pilih Nama</option>
-            {namaSurvOptions.map((name, index) => (
-              <option key={index} value={name}>
-                {name}
-              </option>
-            ))}
-          </select>
+    <div>
+      <Header />
+      <div className="max-w-screen-xl mx-auto px-6 py-8 bg-gray-100 rounded-lg shadow-lg">
+        {/* Form Input */}
+        <div className="flex flex-col md:flex-row md:items-center mb-6 gap-3">
+          {/* Regional Field Verifier Name */}
+          <div className="flex flex-col">
+            <label className="text-sm font-semibold text-gray-700 mb-1">
+              Regional Field Verifier Name
+            </label>
+            <select
+              value={selectedNamaSurv}
+              onChange={(e) => setSelectedNamaSurv(e.target.value)}
+              className="border border-gray-300 rounded-lg px-4 py-2 w-full md:w-64 focus:ring focus:ring-blue-300"
+            >
+              <option value="">Pilih Nama</option>
+              {namaSurvOptions.map((name, index) => (
+                <option key={index} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Date */}
+          <div className="flex flex-col">
+            <label className="text-sm font-semibold text-gray-700 mb-1">
+              Date
+            </label>
+            <select
+              value={selectedTanggal}
+              onChange={(e) => setSelectedTanggal(e.target.value)}
+              className="border border-gray-300 rounded-lg px-4 py-2 w-full md:w-44 focus:ring focus:ring-blue-300"
+            >
+              <option value="">Pilih Tanggal</option>
+              {tanggalOptions.map((date, index) => (
+                <option key={index} value={date}>
+                  {date}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        <div className="flex flex-col">
-          <label className="text-sm font-semibold text-gray-700 mb-1">
-            Date
-          </label>
-          <select
-            value={selectedTanggal}
-            onChange={(e) => setSelectedTanggal(e.target.value)}
-            className="border border-gray-300 rounded-lg px-4 py-2 w-44 focus:ring focus:ring-blue-300"
-          >
-            <option value="">Pilih Tanggal</option>
-            {tanggalOptions.map((date, index) => (
-              <option key={index} value={date}>
-                {date}
-              </option>
-            ))}
-          </select>
+        {/* Performance Cards */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-6 mb-10 sm:mb-16">
+          <DailyPerform data={dailyPerformData} />
+          <MonthlyPerform data={monthlyPerformData} />
+          {/* Character Image */}
+          <Image
+            src="/images/orang-merah.png"
+            alt="Character"
+            width={140}
+            height={140}
+            className="hidden sm:flex absolute bottom-[-38px] left-[160px]"
+          />
         </div>
       </div>
-
-      {/* Performance Cards */}
-      <div className="grid grid-cols-2 gap-8 mt-6 relative">
-        <DailyPerform data={dailyPerformData} />
-        <MonthlyPerform data={monthlyPerformData} />
-        {/* Character Image */}
-        <Image
-          src="/images/orang-merah.png"
-          alt="Character"
-          width={140}
-          height={140}
-          className="absolute bottom-[-0px] left-[20px]"
-        />
-      </div>
+      <Footer />
     </div>
   );
 };

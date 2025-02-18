@@ -77,7 +77,7 @@ const Achievement = () => {
   const fetchDailyPerform = async () => {
     try {
       const response = await axios.get(
-        `https://sheets.googleapis.com/v4/spreadsheets/${sheetID}/values/master!A3:AQ?key=${apiKey}`
+        `https://sheets.googleapis.com/v4/spreadsheets/${sheetID}/values/master!A3:AR?key=${apiKey}`
       );
 
       if (response.data.values) {
@@ -154,19 +154,27 @@ const Achievement = () => {
 
         const totalKontrak = filteredData.length;
 
-        let penyelesaian = 0;
+        let penyelesaianNBOT = 0;
+        let sisaBahanD1D3 = 0;
+        let lossNBOT = 0;
         let sisaBahan = 0;
 
         filteredData.forEach((row) => {
-          if (["EA-OT", "D1-D3", "L1", "L2-L5"].includes(row[25])) {
-            penyelesaian++;
-          } else if (["BAHAN"].includes(row[25])) {
+          const status = row[25]; // Kolom Z
+
+          if (status === "EA-OT") {
+            penyelesaianNBOT++;
+          } else if (status === "D1-D3") {
+            sisaBahanD1D3++;
+          } else if (["L1", "L2-L5"].includes(status)) {
+            lossNBOT++;
+          } else if (status === "BAHAN") {
             sisaBahan++;
           }
         });
 
         const achievement =
-          totalKontrak > 0 ? (penyelesaian / totalKontrak) * 100 : 0;
+          totalKontrak > 0 ? (penyelesaianNBOT / totalKontrak) * 100 : 0;
 
         let penyelesaianMenujuTarget;
         const target = totalKontrak * 0.88;
@@ -175,16 +183,24 @@ const Achievement = () => {
           penyelesaianMenujuTarget = "TARGET!";
         } else {
           penyelesaianMenujuTarget = `Perlu ${Math.ceil(
-            target - penyelesaian
+            target - penyelesaianNBOT
           )} lagi untuk mencapai TARGET!`;
         }
 
+        const potensiNBOT =
+          totalKontrak > 0
+            ? ((sisaBahan + penyelesaianNBOT) / totalKontrak) * 100
+            : 0;
+
         setMonthlyPerformData({
           totalKontrak,
-          penyelesaian,
+          lossNBOT,
+          penyelesaianNBOT,
+          sisaBahanD1D3,
           sisaBahan,
           achievement,
           penyelesaianMenujuTarget,
+          potensiNBOT,
         });
       } else {
         setMonthlyPerformData(null);
